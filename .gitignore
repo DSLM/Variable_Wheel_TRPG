@@ -1,0 +1,5 @@
+*~
+*#
+update.*.json
+node_modules/*
+docs

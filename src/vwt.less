@@ -1,0 +1,133 @@
+.typeTitle {
+    font-size: 48px;
+}
+.fileTitle {
+    font-size: 36px;
+}
+.skillTitle {
+    font-size: 24px;
+}
+
+//技能文本间隔
+.fileText>div {
+    padding-bottom: 1rem;
+}
+
+.skillText {
+    white-space: pre-line;
+}
+
+
+body {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+}
+body::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
+}
+
+.main {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+#middleText {
+    flex-grow: 1;
+    padding: 1rem;
+}
+
+.vscroll {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.menuContainer {
+  height: 100%;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.test {
+    font-size: 1rem;
+    color: #000;
+}
+
+
+@media screen and (max-width: 1023px) {
+    .b-sidebar {
+        .sidebar-content {
+            &.is-mini-mobile {
+                &:not(.is-mini-expand),
+                &.is-mini-expand:not(:hover):not(.is-mini-delayed) {
+                    .menu-list {
+                        li {
+                            a {
+                                span:nth-child(2) {
+                                    display: none;
+                                }
+                            }
+                            ul {
+                                padding-left: 0;
+                                li {
+                                    a {
+                                        display: inline-block;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .menu-label:not(:last-child) {
+                        margin-bottom: 0;
+                    }
+                }
+            }
+        }
+    }
+}
+@media screen and (min-width: 1024px) {
+    .b-sidebar {
+        .sidebar-content {
+            &.is-mini {
+                &:not(.is-mini-expand),
+                &.is-mini-expand:not(:hover):not(.is-mini-delayed) {
+                    .menu-list {
+                        li {
+                            a {
+                                span:nth-child(2) {
+                                    display: none;
+                                }
+                            }
+                            ul {
+                                padding-left: 0;
+                                li {
+                                    a {
+                                        display: inline-block;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .menu-label:not(:last-child) {
+                        margin-bottom: 0;
+                    }
+                }
+            }
+        }
+    }
+}
+.is-mini a {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-content {
+    //resize: horizontal;
+}
