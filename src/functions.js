@@ -39,6 +39,10 @@ export function improListDeal(type, file, typeNum, fileData)
                     //技能总数
                     returnData.len += 1;
                 }
+                else
+                {
+                    tempStr = `<div>${tempStr}</div>`;
+                }
                 returnData.data += tempStr;
             }
         });
