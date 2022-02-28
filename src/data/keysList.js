@@ -204,6 +204,26 @@ export var keysList = {
 '伤势恶化':'[伤势恶化]：当角色在受伤后长期没有得到医疗的情况下，角色身上的伤势将会恶化。在受伤的角色，在12个小时（恶劣环境中可能这个时间将会更快，由主持人决定）没有得到妥善处理的情况下，角色的伤势将会开始恶化，日常每小时降低[壮硕值*1]的生命值，至多不会超过30点。这个伤害在角色进入极限生命值状态后将会立刻开始生效，并在角色生命值归零后，扣除等量的极限生命值。',
 '拟态':'[拟态]：当具有这个效果的角色进入潜行时，即使他被暴露在对方的感官之中，他也依旧能够进行潜行。在没有被察觉到时，对方会认为这个角色只是一个场景中的物件。'};
 
+export var improTrueKeysList = {
+    "抵点":{
+        skills:{},
+        subkeys:{},
+        show:{files:new Set(), skills:new Set()},
+        lessArr:{files:new Set(), skills:new Set()},
+        moreArr:{files:new Set(), skills:new Set()}},
+    "效果":{
+        skills:{},
+        subkeys:{},
+        show:{files:new Set(), skills:new Set()},
+        lessArr:{files:new Set(), skills:new Set()},
+        moreArr:{files:new Set(), skills:new Set()}},
+    "未分类":{
+        skills:{},
+        subkeys:{},
+        show:{files:new Set(), skills:new Set()},
+        lessArr:{files:new Set(), skills:new Set()},
+        moreArr:{files:new Set(), skills:new Set()}}};
+
 export function getTooltips(key, cost)
 {
     key = key.replace("抵点：", "");

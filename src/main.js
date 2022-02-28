@@ -1,22 +1,28 @@
 import { improList } from "./data/improList.js";
-import { improTrueKeysList } from "./data/improTrueKeysList.js";
-import { keysList, offsetKeys, effectKeys, getTooltips } from "./data/keysList.js";
-import { skillsText, trueKeysMenu, showKeys } from "./functions.js";
-
+import { keysList, offsetKeys, effectKeys, improTrueKeysList, getTooltips } from "./data/keysList.js";
+import { improListDeal, rebuildKeys, showKeys } from "./functions.js";
+import { vars } from "./vars.js";
 
 let main = $(`#main`);
 $('body').append(main);
 
 
-let improMenu = {name:"强化序列库", data:[]};
-let keysMenu = [], allKeys = [];
+//初始化
+let newImproList = {name:"强化序列库", data:[]};
+offsetKeys.forEach((key) => {
+    improTrueKeysList["抵点"].subkeys[key] = {skills:{}, subkeys:{}, show:{files:new Set(), skills:new Set()}, lessArr:{files:new Set(), skills:new Set()}, moreArr:{files:new Set(), skills:new Set()}};
+});
+effectKeys.forEach((key) => {
+    improTrueKeysList["效果"].subkeys[key] = {skills:{}, subkeys:{}, show:{files:new Set(), skills:new Set()}, lessArr:{files:new Set(), skills:new Set()}, moreArr:{files:new Set(), skills:new Set()}};
+});
+
 
 //左中右三栏
-let leftText = $(`<div id="leftSideMenu">
+let mainText = $(`<div id="leftSideMenu">
     <section class="sidebar-layout">
          <b-sidebar
             position="static"
-            :reduce="reduce"
+            :reduce="reduceLeft"
             type="is-light"
             fullheight="true"
             open
@@ -24,30 +30,33 @@ let leftText = $(`<div id="leftSideMenu">
             <div class="menuContainer">
                 <b-menu class="is-custom-mobile vscroll" type="is-dark">
                         <b-menu-list label="强化序列库">
-                            <template v-for="folder in improMenu.data">
-                                <b-menu-item :label="folder.name+'（'+folder.data.length+'）'">
-                                    <template v-for="file in folder.data">
-                                                <b-menu-item :label="file.name+'（'+file.len+'）'" :href="file.data">
+                            <template v-for="type in improList.data">
+                                <b-menu-item :label="type.name+'（'+type.data.length+'）'">
+                                    <template v-for="file in type.data">
+                                                <b-menu-item :label="file.name+'（'+file.len+'）'" :href="'#'+file.key">
                                     </template>
                                 </b-menu-item>
                             </template>
                         </b-menu-list>
                 </b-menu>
                 <b-field>
-                    <b-switch v-model="reduce">{{reduce?"":"收起"}}</b-switch>
+                    <b-switch v-model="reduceLeft">{{reduceLeft?"":"收起"}}</b-switch>
                 </b-field>
             </div>
         </b-sidebar>
     </section>
-</div>`);
-main.append(leftText);
-let middleText = $(`<div id="middleText" class="middleText vscroll"></div>`);
-main.append(middleText);
-let rightText = $(`<div id="rightSideMenu">
+</div>
+<div id="middleText" class="middleText vscroll">
+    <template v-for="type in improList.data">
+        <div class="typeTitle">{{type.name}}</div>
+        <div v-for="file in type.data" :id="file.key" class="fileText" v-html="file.data"></div>
+    </template>
+</div>
+<div id="rightSideMenu">
     <section class="sidebar-layout">
          <b-sidebar
             position="static"
-            :reduce="reduce"
+            :reduce="reduceRight"
             type="is-light"
             fullheight="true"
             right="true"
@@ -56,108 +65,108 @@ let rightText = $(`<div id="rightSideMenu">
             <div class="menuContainer">
                 <b-menu class="is-custom-mobile vscroll">
                     <b-menu-list label="词条">
-                        <template v-for="k1 in keysMenu">
-                            <b-menu-item @click="showKeys(k1.show)" :disabled="k1.data.length == 0 && k1.show.length == 0" v-if="!(k1.data.length == 0 && k1.show.length == 0 && hide)">
+
+                        <template v-for="k1 in keysList">
+                            <b-menu-item @click="if(k1.subkeys.length == 0)showKeys(k1.show)" :disabled="k1.subkeys.length == 0 && k1.show.files.size == 0" v-if="!(k1.subkeys.length == 0 && k1.show.files.size == 0 && hide)">
                                 <template #label="props">
-                                    {{k1.name}}
-                                    <b-icon v-if="!reduce && k1.data.length > 0" class="is-pulled-right" :icon="props.expanded ? 'menu-up' : 'menu-down'"></b-icon>
+                                    {{k1.key}}（{{k1.show.skills.size}}）
+                                    <b-icon v-if="!reduceRight && k1.subkeys.length" class="is-pulled-right" :icon="props.expanded ? 'menu-up' : 'menu-down'"></b-icon>
                                 </template>
-                                <template v-for="k2 in k1.data">
-                                    <b-menu-item @click="showKeys(k2.show)" :disabled="k2.data.length == 0 && k2.show.length == 0" v-if="!(k2.data.length == 0 && k2.show.length == 0 && hide)">
+
+                                <template v-for="k2 in k1.subkeys">
+                                    <b-menu-item @click="if(k2.subkeys.length == 0)showKeys(k2.show)" :disabled="k2.subkeys.length == 0 && k2.show.files.size == 0" v-if="!(k2.subkeys.length == 0 && k2.show.files.size == 0 && hide)">
                                         <template #label="props">
-                                            {{k2.name}}
-                                            <b-icon v-if="!reduce && k2.data.length > 0" class="is-pulled-right" :icon="props.expanded ? 'menu-up' : 'menu-down'"></b-icon>
+                                            {{k2.key}}（{{k2.show.skills.size}}）
+                                            <b-icon v-if="!reduceRight && k2.subkeys.length" class="is-pulled-right" :icon="props.expanded ? 'menu-up' : 'menu-down'"></b-icon>
                                         </template>
-                                        <template v-for="k3 in k2.data">
-                                            <b-menu-item @click="showKeys(k3.show)" :disabled="k3.data.length == 0 && k3.show.length == 0" v-if="!(k3.data.length == 0 && k3.show.length == 0 && hide)">
+
+                                        <template v-for="k3 in k2.subkeys">
+                                            <b-menu-item @click="if(k3.subkeys.length == 0)showKeys(k3.show)" :disabled="k3.subkeys.length == 0 && k3.show.files.size == 0" v-if="!(k3.subkeys.length == 0 && k3.show.files.size == 0 && hide)">
                                                 <template #label="props">
-                                                    {{k3.name}}
-                                                    <b-icon v-if="!reduce && k3.data.length > 0" class="is-pulled-right" :icon="props.expanded ? 'menu-up' : 'menu-down'"></b-icon>
+                                                    {{k3.key}}（{{k3.show.skills.size}}）
+                                                    <b-icon v-if="!reduceRight && k3.subkeys.length" class="is-pulled-right" :icon="props.expanded ? 'menu-up' : 'menu-down'"></b-icon>
                                                 </template>
-                                                <template v-for="k4 in k3.data">
-                                                    <b-menu-item @click="showKeys(k4.show)" :disabled="k4.data.length == 0 && k4.show.length == 0" v-if="!(k4.data.length == 0 && k4.show.length == 0 && hide)">
+
+                                                <template v-for="k4 in k3.subkeys">
+                                                    <b-menu-item @click="if(k4.subkeys.length == 0)showKeys(k4.show)" :disabled="k4.subkeys.length == 0 && k4.show.files.size == 0" v-if="!(k4.subkeys.length == 0 && k4.show.files.size == 0 && hide)">
                                                         <template #label="props">
-                                                            {{k4.name}}
-                                                            <b-icon v-if="!reduce && k4.data.length > 0" class="is-pulled-right" :icon="props.expanded ? 'menu-up' : 'menu-down'"></b-icon>
+                                                            {{k4.key}}（{{k4.show.skills.size}}）
+                                                            <b-icon v-if="!reduceRight && k4.subkeys.length" class="is-pulled-right" :icon="props.expanded ? 'menu-up' : 'menu-down'"></b-icon>
                                                         </template>
+
+                                                        <template v-for="k5 in k4.subkeys">
+                                                            <b-menu-item @click="if(k5.subkeys.length == 0)showKeys(k5.show)" :disabled="k5.subkeys.length == 0 && k5.show.files.size == 0" v-if="!(k5.subkeys.length == 0 && k5.show.files.size == 0 && hide)">
+                                                                <template #label="props">
+                                                                    {{k5.key}}（{{k5.show.skills.size}}）
+                                                                    <b-icon v-if="!reduceRight && k5.subkeys.length" class="is-pulled-right" :icon="props.expanded ? 'menu-up' : 'menu-down'"></b-icon>
+                                                                </template>
+
+
+                                                            </b-menu-item>
+                                                        </template>
+
                                                     </b-menu-item>
                                                 </template>
+
                                             </b-menu-item>
                                         </template>
+
                                     </b-menu-item>
                                 </template>
+
                             </b-menu-item>
                         </template>
-                        <b-menu-item label="所有" @click="function(){$('.fileText').show();$('.skillText').show();}"></b-menu-item>
+
+
+
+
+                        <b-menu-item :label="'所有（'+skillsNum+'）'" @click="function(){$('.fileText').show();$('.skillText').show();}"></b-menu-item>
                     </b-menu-list>
                 </b-menu>
                 <b-field>
-                    <b-switch v-model="reduce">{{reduce?"":"收起"}}</b-switch>
-                    <b-switch v-if="!reduce" v-model="hide">隐藏无效关键词</b-switch>
+                    <b-switch v-model="reduceRight">{{reduceRight?"":"收起"}}</b-switch>
+                    <b-switch v-if="!reduceRight" v-model="hide">隐藏无效关键词</b-switch>
                 </b-field>
             </div>
         </b-sidebar>
     </section>
 </div>`);
-main.append(rightText);
+main.append(mainText);
 
-//二次处理文本
+//文本分析
 Object.keys(improList).forEach((type) => {
         let tempFolder = {name:type, data:[]};
-        middleText.append($(`<div class="typeTitle">${type}</div>`));
         Object.keys(improList[type].files).forEach((file) => {
-                let tempFile = {name:file, data:`#file_${improList[type].id}_${improList[type].files[file].id}`,
-                len:improList[type].files[file].skills.length};
-                //文本添加
-                skillsText(middleText, file, improList[type].files[file], improList[type].id);
+                let returnData = improListDeal(type, file, improList[type].id, improList[type].files[file]);
+                let key = `file_${improList[type].id}_${improList[type].files[file].id}`;
+                let tempFile = {name:file, key:key, data:`
+                <div class="fileTitle">${file}</div>${returnData.data}`, len:returnData.len};
                 tempFolder.data.push(tempFile);
         });
-        improMenu.data.push(tempFolder);
+        newImproList.data.push(tempFolder);
 });
 
-//目录栏目
-let leftSideMenu = new Vue({
-    el: `#leftSideMenu`,
+//重构关键词
+let rebuildKeysList = rebuildKeys(improTrueKeysList);
+
+if(process.env.NODE_ENV=="development")
+{
+    console.log(improTrueKeysList);
+    console.log(newImproList);
+    console.log(rebuildKeysList);
+}
+
+//正文
+let mainVue = new Vue({
+    el: `#main`,
     data: {
-          reduce: false,
-          improMenu: improMenu
-    }
-});
-
-//二次处理真实关键词
-let orderImproTrueKeysList = {};
-//只有需要的关键词
-let keysLists = {"抵点": offsetKeys, "效果": effectKeys};
-Object.keys(keysLists).forEach((k1) => {
-    orderImproTrueKeysList[k1] = {"types":improTrueKeysList[k1].types, "subkeys":{}};
-    keysLists[k1].forEach((k2) => {
-        orderImproTrueKeysList[k1].subkeys[k2] = {"types":{}, "subkeys":{}};
-    });
-    orderImproTrueKeysList[k1].subkeys["自定义"] = {"types":{}, "subkeys":{}};
-    Object.keys(improTrueKeysList[k1].subkeys).forEach((k2) => {
-        if(orderImproTrueKeysList[k1].subkeys[k2] == undefined)
-        {
-            orderImproTrueKeysList[k1].subkeys[k2] = improTrueKeysList[k1].subkeys[k2];
-        }
-        else
-        {
-            orderImproTrueKeysList[k1].subkeys[k2].types = improTrueKeysList[k1].subkeys[k2].types;
-            orderImproTrueKeysList[k1].subkeys[k2].subkeys = improTrueKeysList[k1].subkeys[k2].subkeys;
-        }
-    });
-});
-orderImproTrueKeysList["未分类"] = {"types":improTrueKeysList["未分类"].types, "subkeys":{}};
-
-//关键词栏目
-let tempData = trueKeysMenu(orderImproTrueKeysList, improList);
-keysMenu = tempData[0];
-let rightSideMenu = new Vue({
-    el: `#rightSideMenu`,
-    data: {
-        reduce: false,
+        reduceLeft: false,
         hide: true,
-        keysMenu: keysMenu,
-        showKeys: showKeys
+        showKeys: showKeys,
+        reduceRight: false,
+        improList: newImproList,
+        keysList: rebuildKeysList,
+        skillsNum: vars.skillsNum
     }
 });
 
@@ -172,5 +181,5 @@ tippy('.fullKey', {
     trigger: 'click',
     interactive: true,
     maxWidth: "50rem",
-    theme: 'light-border',
+    theme: 'light-border'
 });
