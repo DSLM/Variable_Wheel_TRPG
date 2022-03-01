@@ -213,9 +213,9 @@ export function rebuildKeys(obj)
 }
 
 //响应关键词
-export function showKeys(list)
+export function showKeys(list, len)
 {
-    if(list.files == undefined || list.files.length == 0) return;
+    if(list.files == undefined || list.files.length == 0 || len != 0) return;
     $(`.fileText`).hide();
     $(`.skillText`).hide();
     $(`#${Array.from(list.files).join(",#")}`).show();
