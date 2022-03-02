@@ -1,3 +1,15 @@
+@black: #000000;
+@white: #ffffff;
+
+@color_skillTitle: #ca1243;
+@color_skillBorder: #dbdbdb;
+
+@color_keyWords: #a626a4;
+@color_preIntro: #4078f2;
+@color_prioNum: #b76b01;
+@color_preOffset: #e45649;
+
+
 .typeTitle {
     font-size: 48px;
 }
@@ -5,22 +17,51 @@
     font-size: 36px;
 }
 .skillTitle {
-    color: #ca1243;
+    color: @color_skillTitle;
     font-weight: bold;
 }
 .fullKey {
-    color: #a626a4;
+    color: @color_keyWords;
     font-weight:bold;
+}
+.preIntro {
+    color: @color_preIntro;
+    font-weight: bold;
+}
+.prioNum {
+    color: @color_prioNum;
+    font-weight: bold;
+}
+.preOffset {
+    color: @color_preOffset;
+    font-weight: bold;
+}
+
+.tippy-box {
+  border-color: @black !important;
+}
+.tippy-box[data-placement^='top'] .tippy-arrow:after {
+  border-top-color: @black !important;
+}
+.tippy-box[data-placement^='bottom'] .tippy-arrow:after {
+  border-bottom-color: @black !important;
+}
+.tippy-box[data-placement^='left'] .tippy-arrow:after {
+  border-left-color: @black !important;
+}
+.tippy-box[data-placement^='right'] .tippy-arrow:after {
+  border-right-color: @black !important;
 }
 
 //文本间隔，提行
 .fileText>div {
     padding-bottom: 1rem;
     white-space: pre-line;
-    border-bottom: #dbdbdb solid 1px;
+    border-bottom: @color_skillBorder solid 1px;
 }
+//文件块
 .fileText {
-    border: #000 solid 1px;
+    border: @black solid 1px;
     margin-bottom: 1rem;
 }
 

@@ -84,7 +84,6 @@ let mainVue = new Vue({
     el: `#main`,
     data: {
         reduceLeft: false,
-        hide: true,
         improList: newImproList,
         keysList: rebuildKeysList,
         skillsNum: vars.skillsNum

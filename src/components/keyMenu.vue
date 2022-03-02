@@ -96,6 +96,7 @@
         data() {
             return {
                 showKeys: showKeys,
+                hide: true,
                 reduceRight: false
             }
         }

@@ -5,9 +5,10 @@ export function improListDeal(type, file, typeNum, fileData)
 {
     let splitData = fileData.data.split(/\n-----*\n/);
     let returnData = {data:"", len:0};
-    let skillRegex = /技能名称：(.*)/g;
-    let realRegex = /实际耗点：(.*)/g;
-    let keyRegex = /([0-9]*)（([^）]*)）/g;
+    let skillRegex = /(技能名称：)(.*)/g;
+    let prioRegex = /(优先等级：)([0-9]*)/g;
+    let realRegex = /(实际耗点：)([0-9]*)(.*)/g;
+    let keyRegex = /([0-9]*)（(抵点：)?([^）]*)）/g;
 
     if(type == "种族")
     {
@@ -66,7 +67,15 @@ export function improListDeal(type, file, typeNum, fileData)
                     if(process.env.NODE_ENV=="development")
                         console.log(`多个名称，有问题：${file} ${tempStr.match(skillRegex)}`);
                 }
-                tempStr = `<div id="skill_${typeNum}_${fileData.id}_${returnData.len}" class="skillText">${tempStr.replace(nameObj[0], nameObj[0].replace(nameObj[1], `<span class="skillTitle">${nameObj[1]}</span>`))}</div>`;
+                tempStr = `<div id="skill_${typeNum}_${fileData.id}_${returnData.len}" class="skillText">${tempStr.replace(nameObj[0], `<span class="preIntro">${nameObj[1]}</span><span class="skillTitle">${nameObj[2]}</span>`)}</div>`;
+
+                //优先等级
+                prioRegex.lastIndex = 0;
+                let prioObj = prioRegex.exec(tempStr);
+                if(prioObj != null)
+                {
+                    tempStr = tempStr.replace(prioObj[0], `<span class="preIntro">${prioObj[1]}</span><span class="prioNum">${prioObj[2]}</span>`);
+                }
 
                 //提取并替换真实关键词
                 let realObj = realRegex.exec(tempStr);
@@ -93,13 +102,20 @@ export function improListDeal(type, file, typeNum, fileData)
                 }
                 else
                 {
-                    for (let keyObj of realObj[0].matchAll(keyRegex))
+                    //开头
+                    newString += `<span class="preIntro">${realObj[1]}</span><span class="prioNum">${realObj[2]}</span>`;
+                    //关键词
+                    for (let keyObj of realObj[3].matchAll(keyRegex))
                     {
+                        //抵点二字
+                        let offsetPre = keyObj[2];
+                        if(offsetPre == undefined)
+                            offsetPre = "";
                         //替换
-                        let cost = keyObj[1], key = keyObj[2];
-                        newString += realObj[0].slice(nowIndex, keyObj.index);
+                        let cost = keyObj[1], key = offsetPre+keyObj[3];
+                        newString += realObj[3].slice(nowIndex, keyObj.index);
                         nowIndex = keyObj.index + keyObj[0].length;
-                        newString += `<span class='fullKey' data-cost='${keyObj[1]}' data-key='${keyObj[2]}'>${keyObj[0]}</span>`;
+                        newString += `<span class="prioNum">${keyObj[1]}</span><span class='fullKey' data-cost='${cost}' data-key='${key}'>（<span class="preOffset">${offsetPre}</span>${keyObj[3]}）</span>`;
                         //提取
                         //技能->关键词
                         //list["skills"][-1]["keys"][key] = {"cost": cost}
@@ -113,7 +129,7 @@ export function improListDeal(type, file, typeNum, fileData)
                             pushKeys(type, file, typeNum, fileData.id, returnData.len, key, "效果");
                         }
                     }
-                    newString +=  realObj[0].slice(nowIndex);
+                    newString +=  realObj[3].slice(nowIndex);
                     tempStr = tempStr.replace(realObj[0], newString);
 
                     //无实际耗点
