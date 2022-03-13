@@ -7,8 +7,8 @@ import lzstring #pip install lzstring
 debugList = {"keys":{}, "skills":[], "noUpdate":[]}
 debugSkillNum = [0, 0];
 
-changelogs = {"impro":{}}
 improTrueKeysList = {"抵点":{"types":{}, "subkeys":{}}, "效果":{"types":{}, "subkeys":{}}, "未分类":{"types":{}, "subkeys":{}}}
+itemTrueKeysList = {"抵点":{"types":{}, "subkeys":{}}, "效果":{"types":{}, "subkeys":{}}, "未分类":{"types":{}, "subkeys":{}}}
 
 #去除后缀
 dataSource = "./DataSource"
@@ -40,6 +40,7 @@ for paragraph in doc.paragraphs:
         theFile.write(f"'{i[0]}':'[{i[0]}]{i[1]}',\n")
 theFile.close()
 
+#强化库
 #新方式：客户端处理页面
 improList = {
 "初始技能与日常技能":{"id":1},
@@ -52,7 +53,6 @@ for file in os.listdir(improDataBase):
     if ("更新日志" in file):
         if (file not in "更新日志.txt"):
             os.rename(os.path.join(improDataBase, file), os.path.join(improDataBase, "更新日志.txt"))
-        changelogs["impro"]["path"] = improDataBase + "/更新日志.txt"
     for key in improList:
         if (key in file) and (file not in key):
             os.rename(os.path.join(improDataBase, file), os.path.join(improDataBase, key))
@@ -74,5 +74,11 @@ for key in improList:
 theFile = open('./src/data/improList.js', 'w', encoding="utf-8")
 x = lzstring.LZString()
 str = json.dumps(improList, ensure_ascii=False)
-theFile.write("export var improList = '" + x.compressToBase64(str) + "'")
+theFile.write("export var decImproList = '" + x.compressToBase64(str) + "'")
 theFile.close()
+
+#道具库
+for file in os.listdir(itemDataBase):
+    if ("更新日志" in file):
+        if (file not in "更新日志.txt"):
+            os.rename(os.path.join(itemDataBase, file), os.path.join(itemDataBase, "更新日志.txt"))

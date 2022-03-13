@@ -1,4 +1,4 @@
-import { improList } from "./data/improList.js";
+import { decImproList } from "./data/improList.js";
 import { keysList, offsetKeys, effectKeys, improTrueKeysList, getTooltips } from "./data/keysList.js";
 import { improListDeal, rebuildKeys } from "./functions.js";
 import { vars } from "./vars.js";
@@ -9,7 +9,7 @@ $('body').append(main);
 
 
 //初始化
-improList = JSON.parse(LZString.decompressFromBase64(improList))
+let improList = JSON.parse(LZString.decompressFromBase64(decImproList))
 let newImproList = {name:"强化序列库", data:[]};
 offsetKeys.forEach((key) => {
     improTrueKeysList["抵点"].subkeys[key] = {skills:{}, subkeys:{}, show:{files:new Set(), skills:new Set()}, lessArr:{files:new Set(), skills:new Set()}, moreArr:{files:new Set(), skills:new Set()}};
