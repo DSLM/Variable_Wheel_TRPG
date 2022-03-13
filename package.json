@@ -28,6 +28,7 @@
     "webpack-cli": "^4.2.0"
   },
   "dependencies": {
+    "lz-string": "^1.4.4",
     "node": "^16.1.0",
     "vue-loader": "^15.9.8",
     "vue-template-compiler": "^2.6.14"

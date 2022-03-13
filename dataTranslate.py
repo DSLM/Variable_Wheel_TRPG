@@ -2,6 +2,7 @@ import os
 import json
 import re
 from docx import Document #pip install python_docx
+import lzstring #pip install lzstring
 
 debugList = {"keys":{}, "skills":[], "noUpdate":[]}
 debugSkillNum = [0, 0];
@@ -71,5 +72,7 @@ for key in improList:
     del improList[key]["path"]
 
 theFile = open('./src/data/improList.js', 'w', encoding="utf-8")
-theFile.write("export var improList = " + json.dumps(improList, ensure_ascii=False))
+x = lzstring.LZString()
+str = json.dumps(improList, ensure_ascii=False)
+theFile.write("export var improList = '" + x.compressToBase64(str) + "'")
 theFile.close()

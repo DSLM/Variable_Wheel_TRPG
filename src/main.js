@@ -9,6 +9,7 @@ $('body').append(main);
 
 
 //初始化
+improList = JSON.parse(LZString.decompressFromBase64(improList))
 let newImproList = {name:"强化序列库", data:[]};
 offsetKeys.forEach((key) => {
     improTrueKeysList["抵点"].subkeys[key] = {skills:{}, subkeys:{}, show:{files:new Set(), skills:new Set()}, lessArr:{files:new Set(), skills:new Set()}, moreArr:{files:new Set(), skills:new Set()}};
