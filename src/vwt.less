@@ -9,12 +9,18 @@
 @color_prioNum: #b76b01;
 @color_preOffset: #e45649;
 
+//"黑色","绿色","蓝色","紫色","红色","橙色","金色"
+@color_level: @black, #1d953f, #33a3dc, #8552a1, #ed1941, #f58220, #fcaf17;
 
-.typeTitle {
+
+.title1 {
     font-size: 48px;
 }
-.fileTitle {
+.title2 {
     font-size: 36px;
+}
+.title3 {
+    font-size: 24px;
 }
 .skillTitle {
     color: @color_skillTitle;
@@ -71,18 +77,38 @@
   border-right-color: @black !important;
 }
 
+//文件块
+.fileText {
+    border: @black solid 1px;
+    margin-bottom: 1rem;
+}
 //文本间隔，提行
 .fileText>div {
     padding-bottom: 1rem;
     white-space: pre-line;
     border-bottom: @color_skillBorder solid 1px;
 }
-//文件块
-.fileText {
+
+//道具块
+.itemText {
     border: @black solid 1px;
     margin-bottom: 1rem;
 }
-
+//文本间隔，提行
+.itemText>div {
+    padding-bottom: 1rem;
+    white-space: pre-line;
+    border-bottom: @color_skillBorder solid 1px;
+}
+//高亮道具名字
+.generate-item-title(7);
+.generate-item-title(@n, @i: 1) when (@i =< @n) {
+  .itemText.itemLevel-@{i}>.title3 {
+    color: @white;
+    background-color: extract(@color_level, @i);
+  }
+  .generate-item-title(@n, (@i + 1));
+}
 
 body {
     -ms-overflow-style: none;  /* Internet Explorer 10+ */

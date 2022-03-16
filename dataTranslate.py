@@ -7,8 +7,10 @@ from docx import Document #pip install python_docx
 import lzstring #pip install lzstring
 import openpyxl #pip install openpyxl
 import openpyxl_image_loader #pip install openpyxl-image-loader
+import xlwings #pip install xlwings
 
 #初始化
+levelToNum = {"黑色":1,"绿色":2,"蓝色":3,"紫色":4,"红色":5,"橙色":6,"金色":7}
 subObj = {"subkeys":{}, "lessArr":{"files":[], "skills":[]}, "moreArr":{"files":[], "skills":[]}}
 totalSkills = 0
 improTrueKeysList = {"抵点":copy.deepcopy(subObj), "效果":copy.deepcopy(subObj), "未分类":copy.deepcopy(subObj)}
@@ -274,7 +276,7 @@ for type in improList:
         tempFolder = {"name":type, "data":[]}
         for file in improList[type]["files"]:
                 key = f"""file_{improList[type]["id"]}_{improList[type]["files"][file]["id"]}"""
-                tempFile = {"name":file, "key":key, "len":improList[type]["files"][file]["len"], "data":f"""<div class="fileTitle">{file}</div>{improList[type]["files"][file]["data"]}"""};
+                tempFile = {"name":file, "key":key, "len":improList[type]["files"][file]["len"], "data":f"""<div class="title2">{file}</div>{improList[type]["files"][file]["data"]}"""};
                 tempFolder["data"].append(tempFile)
         newImproList["data"].append(tempFolder)
 
@@ -296,20 +298,125 @@ def rebuildKeys(obj):
 
 
 #重构关键词
-rebuildKeysList = rebuildKeys(improTrueKeysList)
-print(rebuildKeysList)
+rebuildImproKeysList = rebuildKeys(improTrueKeysList)
 
 
 theFile = open('./src/data/improList.js', 'w', encoding="utf-8")
 x = lzstring.LZString()
 improListStr = json.dumps(newImproList, ensure_ascii=False)
-improTrueKeysListStr = json.dumps(rebuildKeysList, ensure_ascii=False)
+improTrueKeysListStr = json.dumps(rebuildImproKeysList, ensure_ascii=False)
 theFile.write(f"""export var skillsNum = {totalSkills};export var decImproTrueKeysList = '{x.compressToBase64(improTrueKeysListStr)}';export var decImproList = '{x.compressToBase64(improListStr)}';""")
 theFile.close()
 
 #道具库
+itemList = {
+"变量军械库":{"id":1},
+"变量防具库":{"id":2},
+"变量工具库":{"id":3}}
+itemMenusList = {
+"变量军械库":["剑", "刀", "拳套", "长柄", "斧锤", "奇门兵器", "弓", "弩", "半自动枪械", "全自动枪械", "非自动枪械", "魔导器", "共生体武器", "副武器"],
+"变量防具库":["头部", "身体", "背部", "手臂", "腰部", "腿部", "饰品", "共生体", "盾牌", "背包"],
+"变量工具库":["恢复类", "造伤类", "消耗类", "工具类", "组合配件", "载具"]}
+
+#文件导入
 for file in os.listdir(itemDataBase):
     if ("更新日志" in file):
         if (file not in "更新日志.txt"):
             os.rename(os.path.join(itemDataBase, file), os.path.join(itemDataBase, "更新日志.txt"))
-print(totalSkills)
+    for key in itemList:
+        if (key in file) and (file not in key):
+            os.rename(os.path.join(itemDataBase, file), os.path.join(itemDataBase, key+".xlsx"))
+for file in itemList:
+    itemList[file]["path"] = itemDataBase + "/" + file + ".xlsx"
+
+#道具分门别类处理
+#武器类型，资历值加成：无用
+#近战，魔导
+def itemMelee(ws, row, col, id):
+    tempItem = {"key": id, "type": "melee"}
+    tempItem["名称"] = ws.range(row + 0, col + 1).value
+    tempItem["武器大类"] = [
+        ws.range(row + 1, col + 1).value,
+        ws.range(row + 1, col + 2).value,
+        ws.range(row + 1, col + 3).value
+    ]
+    tempItem["攻击力结算"] = ws.range(row + 2, col + 1).value
+    tempItem["攻击力耗点"] = ws.range(row + 2, col + 3).value
+    tempItem["品质"] = ws.range(row + 3, col + 1).value
+    tempItem["level"] = levelToNum[tempItem["品质"]]
+    tempItem["重量"] = ws.range(row + 3, col + 3).value
+    tempItem["总计耗点"] = ws.range(row + 4, col + 1).value
+    tempItem["体积"] = ws.range(row + 4, col + 3).value
+    tempItem["价格"] = ws.range(row + 5, col + 1).value
+    tempItem["效果"] = ws.range(row + 6, col + 0).value
+    tempItem["简介"] = ws.range(row + 6, col + 2).value
+    tempItem["效果耗点"] = ws.range(row + 12, col + 1).value
+    tempItem["立绘"] = ws.range(row + 13, col + 0).value
+    tempItem["制作人"] = ws.range(row + 23, col + 0).value
+    tempItem["cost"] = tempItem["总计耗点"]
+    return tempItem
+
+#挨个处理道具
+#遍历文件
+for file in itemList:
+    menuId = 1
+    itemList[file]["menus"] = {}
+    wb = xlwings.Book(itemList[file]["path"])
+    wb_op = openpyxl.load_workbook(itemList[file]["path"])
+    print(file)
+
+    #遍历工作薄
+    for menu in itemMenusList[file]:
+        itemId = 1
+        itemList[file]["menus"][menu] = {"name": menu, "id": menuId, "items": []}
+        ws = wb.sheets[menu]
+        ws_op = wb_op[menu]
+        #遍历单元格
+        for row in ws_op.iter_rows():
+            for cell in row:
+                #这是一个有名字的东西
+                if cell.value == "名称":
+                    strId = f"""item_{itemList[file]["id"]}_{menuId}_{itemId}"""
+                    #近战，魔导
+                    if ws_op.cell(cell.row + 4, cell.column + 0).value == "总计耗点":
+                        itemList[file]["menus"][menu]["items"].append(itemMelee(ws, cell.row, cell.column, strId))
+                    else:
+                        itemId -= 1
+                        totalItems -=1
+                    itemId += 1
+                    totalItems += 1
+        menuId += 1
+    del itemList[file]["path"]
+    wb.save()
+    wb.close()
+
+#排序方法
+def itemSortGetCost(ele):
+    return int(ele["cost"])
+def itemSortByCost(x, y):
+    if int(x["cost"]) > int(y["cost"]):
+        return 1
+    elif int(x["cost"]) < int(y["cost"]):
+        return -1
+    else:
+        return 0
+
+#文本分析
+newItemList = []
+for file in itemList:
+    for menu in itemMenusList[file]:
+        itemList[file]["menus"][menu]["items"].sort(key=itemSortGetCost)
+    tempFile = {"name":file, "menus":itemList[file]["menus"]}
+    newItemList.append(tempFile)
+
+#重构关键词
+rebuildItemKeysList = rebuildKeys(itemTrueKeysList)
+
+
+theFile = open('./src/data/itemList.js', 'w', encoding="utf-8")
+x = lzstring.LZString()
+itemListStr = json.dumps(newItemList, ensure_ascii=False)
+itemTrueKeysListStr = json.dumps(rebuildItemKeysList, ensure_ascii=False)
+theFile.write(f"""export var itemsNum = {totalItems};export var decItemTrueKeysList = '{x.compressToBase64(itemTrueKeysListStr)}';export var decItemList = '{x.compressToBase64(itemListStr)}';""")
+theFile.close()
+print("End")

@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "less": "lessc -x src/vwt.less vwt/vwt.css",
-    "dev": "npx webpack --config webpack.vwt.dev.js",
-    "build": "npx webpack --config webpack.vwt.prod.js",
+    "dev": "npx webpack --config webpack.improve.dev.js && npx webpack --config webpack.item.dev.js",
+    "build": "npx webpack --config webpack.improve.prod.js && npx webpack --config webpack.item.prod.js",
     "serve": "npm run build && npm run less && servehere -c",
     "serve-dev": "npm run dev && npm run less && servehere -c"
   },
@@ -28,6 +28,8 @@
     "webpack-cli": "^4.2.0"
   },
   "dependencies": {
+    "@jamescoyle/vue-icon": "^0.1.2",
+    "@mdi/js": "^6.5.95",
     "lz-string": "^1.4.4",
     "node": "^16.1.0",
     "vue-loader": "^15.9.8",

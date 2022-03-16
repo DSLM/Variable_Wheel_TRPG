@@ -1,7 +1,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>强化序列库</title>
+        <title>变量之轮</title>
         <link rel="shortcut icon" href="#" />
 
     </head>
@@ -10,17 +10,26 @@
         <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.14/vue.min.js"></script>
         <script src="https://cdn.bootcdn.net/ajax/libs/buefy/0.9.17/buefy.min.js"></script>
         <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/buefy/0.9.17/buefy.min.css">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@5.8.55/css/materialdesignicons.min.css">
         <script src="https://cdn.bootcdn.net/ajax/libs/popper.js/2.11.2/umd/popper.min.js"></script>
         <script src="https://cdn.bootcdn.net/ajax/libs/tippy.js/6.3.7/tippy-bundle.umd.min.js"></script>
         <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/tippy.js/6.3.7/themes/light-border.min.css"/>
         <script src="lib/lz-string.min.js"></script>
-        <script src="vwt/main.js" type="module"></script>
         <link rel="stylesheet" type="text/css" href="vwt/vwt.css">
 
         <div id="main" class="main">
-
+            <div style='height:100%; width:100%; display:flex; flex-direction: column; justify-content: center; align-items: center;'>
+                <div id='realContent' style='display:flex; flex-direction: row; justify-content: center; align-items: center;'></div>
+            </div>
         </div>
 
     </body>
+    <script>
+        let mainText = $(`<a href="improve.html"><b-button>强化序列库</b-button></a><a href="item.html"><b-button>道具序列库（施工中）</b-button></a>`);
+        $(`#realContent`).append(mainText);
+        let mainVue = new Vue({
+            el: `#main`,
+            data: {
+            }
+        });
+    </script>
 </html>
