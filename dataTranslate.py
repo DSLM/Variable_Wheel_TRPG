@@ -528,16 +528,71 @@ def itemTool(ws, row, col, id):
     tempItem["cost"] = tempItem["效果耗点"]
     return tempItem
 
+#载具
+def itemCar(ws, row, col, id):
+    tempItem = {"key": id, "type": "car"}
+    tempItem["名称"] = ws.range(row + 0, col + 1).value
+    tempItem["载具类型"] = ws.range(row + 0, col + 5).value
+
+    tempItem["基础防护"] = ws.range(row + 1, col + 1).value
+    tempItem["结构强度"] = ws.range(row + 2, col + 1).value
+    tempItem["载具出力"] = ws.range(row + 3, col + 1).value
+    tempItem["能量值"] = ws.range(row + 4, col + 1).value
+
+    tempItem["防护耗点"] = ws.range(row + 1, col + 3).value
+    tempItem["结构耗点"] = ws.range(row + 2, col + 3).value
+    tempItem["出力耗点"] = ws.range(row + 3, col + 3).value
+    tempItem["能量耗点"] = ws.range(row + 4, col + 3).value
+
+    tempItem["机动补正"] = ws.range(row + 5, col + 1).value
+    tempItem["耐久补正"] = ws.range(row + 6, col + 1).value
+    tempItem["耗能补正"] = ws.range(row + 7, col + 1).value
+    tempItem["保护补正"] = ws.range(row + 5, col + 3).value
+    tempItem["灵活补正"] = ws.range(row + 6, col + 3).value
+    tempItem["呼叫补正"] = ws.range(row + 7, col + 3).value
+
+    tempItem["载具防护"] = ws.range(row + 8, col + 1).value
+    tempItem["载具速度"] = ws.range(row + 9, col + 1).value
+    tempItem["载具耗能"] = ws.range(row + 10, col + 1).value
+    tempItem["保护效果"] = ws.range(row + 8, col + 3).value
+    tempItem["载具时速"] = ws.range(row + 9, col + 3).value
+    tempItem["载具耐久"] = ws.range(row + 10, col + 3).value
+
+    tempItem["恶劣环境"] = ws.range(row + 2, col + 5).value
+    tempItem["加速性能"] = ws.range(row + 3, col + 5).value
+    tempItem["动力类型"] = ws.range(row + 4, col + 5).value
+    tempItem["乘员上限"] = ws.range(row + 5, col + 5).value
+    tempItem["灵活性"] = ws.range(row + 2, col + 7).value
+    tempItem["乘员防护"] = ws.range(row + 3, col + 7).value
+    tempItem["呼叫时间"] = ws.range(row + 4, col + 7).value
+    tempItem["负重上限"] = ws.range(row + 5, col + 7).value
+
+    tempItem["品质"] = ws.range(row + 11, col + 1).value
+    tempItem["level"] = levelToNum[tempItem["品质"]]
+    tempItem["重量"] = ws.range(row + 11, col + 3).value
+    tempItem["总计耗点"] = ws.range(row + 12, col + 1).value
+    tempItem["体积"] = ws.range(row + 12, col + 3).value
+    tempItem["价格"] = ws.range(row + 13, col + 1).value
+
+    tempItem["效果"] = dealItemEffect(id, ws.range(row + 14, col + 0).value)
+    tempItem["效果耗点"] = ws.range(row + 21, col + 2).value
+    tempItem["简介"] = ws.range(row + 6, col + 4).value
+    tempItem["立绘"] = ws.range(row + 14, col + 4).value
+
+    tempItem["制作人"] = ws.range(row + 22, col + 0).value
+    tempItem["cost"] = tempItem["效果耗点"]
+    return tempItem
+
 #图片导出
 def excelImage(images, row_start, col_start, row_end, col_end, id):
     #记得删，无需二次
-    #return
+    return
     for row in range(row_start, row_end + 1):
         for col in range(col_start, col_end + 1):
             strCoor = f'{col}_{row}'
             if strCoor in images:
                 itemsImage.append(id)
-                images[strCoor].save(f'./src/data/itemsImage/{id}.png')
+                images[strCoor].save(rf'./src/data/itemsImage/{id}.png')
                 return
 
 #排序方法
@@ -622,6 +677,10 @@ for file in itemList:
                         #工具
                         itemList[file]["menus"][menu]["items"].append(itemTool(ws, cell.row, cell.column, strId))
                         excelImage(images, cell.row, cell.column - 1, cell.row + 23, cell.column + 3, strId)
+                    elif ws_op.cell(cell.row + 0, cell.column + 4).value == "载具类型":
+                        #载具
+                        itemList[file]["menus"][menu]["items"].append(itemCar(ws, cell.row, cell.column, strId))
+                        excelImage(images, cell.row, cell.column - 1, cell.row + 22, cell.column + 8, strId)
                     else:
                         #有问题
                         print(ws_op.cell(cell.row + 0, cell.column + 1).value)

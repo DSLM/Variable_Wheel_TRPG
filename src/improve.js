@@ -71,7 +71,7 @@ let mainVue = new Vue({
         let url = window.location.hash;
         if(!url) return;
         //跳转至指定位置
-        $("#middleText").animate({scrollTop:$(window.location.hash).offset().top},1000);
+        document.getElementById(url.replace("#","")).scrollIntoView();
     }
 });
 

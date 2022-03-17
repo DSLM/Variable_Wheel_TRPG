@@ -30,7 +30,7 @@ let mainText = $(`<div id="leftSideMenu">
                                     <template v-for="menu in file.menus">
                                         <b-menu-item :label="menu.name+'（'+menu.items.length+'）'">
                                             <template v-for="item in menu.items">
-                                                        <b-menu-item :label="item['名称']" :href="'#'+item.key">
+                                                        <b-menu-item :label="item['名称']" :href="'#'+item.key" :class="['itemMenu', 'itemLevel-'+item.level]">
                                             </template>
                                         </b-menu-item>
                                     </template>
@@ -50,7 +50,7 @@ let mainText = $(`<div id="leftSideMenu">
         <div class="title1">{{file.name}}</div>
         <template v-for="menu in file.menus">
             <div class="title2">{{menu.name}}</div>
-            <item v-for="item in menu.items" :id="item.key" v-bind:data="item" :class="['itemText', 'itemLevel-'+item.level]"></item>
+            <item v-for="item in menu.items" :id="item.key" v-bind:data="item"  v-bind:has-image="itemsImage.includes(item.key)" :class="['itemText', 'itemLevel-'+item.level]"></item>
         </template>
     </template>
 </div>
@@ -70,7 +70,8 @@ let mainVue = new Vue({
         reduceLeft: false,
         itemList: itemList,
         keysList: itemTrueKeysList,
-        itemsNum: itemsNum
+        itemsNum: itemsNum,
+        itemsImage: itemsImage
     },
     components: {
         itemKeyMenu,
@@ -80,14 +81,7 @@ let mainVue = new Vue({
         let url = window.location.hash;
         if(!url) return;
         //跳转至指定位置
-        $("#middleText").animate({scrollTop:$(url).offset().top},1000);
-
-        itemsImage.forEach((iamge) => {
-            let path = `/src/data/itemsImage/${iamge}.png`;
-            $(`#${iamge}>.image`).append($(`<img src="${path}" alt="加载中"/>`));
-            //$.get(path,function(){});
-        });
-
+        document.getElementById(url.replace("#","")).scrollIntoView();
     }
 });
 

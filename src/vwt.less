@@ -109,6 +109,14 @@
   }
   .generate-item-title(@n, (@i + 1));
 }
+//高亮道具目录
+.generate-item-menu(7);
+.generate-item-menu(@n, @i: 1) when (@i =< @n) {
+  .itemMenu.itemLevel-@{i} {
+      border-left: 5px solid extract(@color_level, @i);
+  }
+  .generate-item-menu(@n, (@i + 1));
+}
 //图片格式
 .itemText>.image>img {
     padding-left: 40%;
