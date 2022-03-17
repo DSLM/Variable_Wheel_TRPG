@@ -1,6 +1,6 @@
-import { decItemList, decItemTrueKeysList, itemsNum } from "./data/itemList.js";
+import { decItemList, decItemTrueKeysList, itemsNum, itemsImage } from "./data/itemList.js";
 import { getTooltips } from "./data/keysList.js";
-import keyMenu from "./components/keyMenu.vue";
+import itemKeyMenu from "./components/ItemKeyMenu.vue";
 import item from "./components/Item.vue";
 
 let main = $(`#main`);
@@ -54,7 +54,7 @@ let mainText = $(`<div id="leftSideMenu">
         </template>
     </template>
 </div>
-<key-menu v-bind:keys-list="keysList" v-bind:num="itemsNum"></key-menu>`);
+<item-key-menu v-bind:keys-list="keysList" v-bind:num="itemsNum"></item-key-menu>`);
 main.append(mainText);
 
 if(process.env.NODE_ENV=="development")
@@ -73,7 +73,7 @@ let mainVue = new Vue({
         itemsNum: itemsNum
     },
     components: {
-        keyMenu,
+        itemKeyMenu,
         item
     },
     mounted:function(){
@@ -81,6 +81,13 @@ let mainVue = new Vue({
         if(!url) return;
         //跳转至指定位置
         $("#middleText").animate({scrollTop:$(url).offset().top},1000);
+
+        itemsImage.forEach((iamge) => {
+            let path = `/src/data/itemsImage/${iamge}.png`;
+            $(`#${iamge}>.image`).append($(`<img src="${path}" alt="加载中"/>`));
+            //$.get(path,function(){});
+        });
+
     }
 });
 

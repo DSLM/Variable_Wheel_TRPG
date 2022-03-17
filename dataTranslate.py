@@ -3,29 +3,34 @@ import os
 import json
 import re
 import copy
+import string
 from docx import Document #pip install python_docx
 import lzstring #pip install lzstring
 import openpyxl #pip install openpyxl
-import openpyxl_image_loader #pip install openpyxl-image-loader
 import xlwings #pip install xlwings
+from PIL import Image
+import io
 
 #初始化
 levelToNum = {"黑色":1,"绿色":2,"蓝色":3,"紫色":4,"红色":5,"橙色":6,"金色":7}
-subObj = {"subkeys":{}, "lessArr":{"files":[], "skills":[]}, "moreArr":{"files":[], "skills":[]}}
+improObj = {"subkeys":{}, "lessArr":{"files":[], "skills":[]}, "moreArr":{"files":[], "skills":[]}}
+itemObj = {"subkeys":{}, "lessArr":{"items":[]}, "moreArr":{"items":[]}}
 totalSkills = 0
-improTrueKeysList = {"抵点":copy.deepcopy(subObj), "效果":copy.deepcopy(subObj), "未分类":copy.deepcopy(subObj)}
+improTrueKeysList = {"抵点":copy.deepcopy(improObj), "效果":copy.deepcopy(improObj), "未分类":copy.deepcopy(improObj)}
 totalItems = 0
-itemTrueKeysList = {"抵点":copy.deepcopy(subObj), "效果":copy.deepcopy(subObj), "未分类":copy.deepcopy(subObj)}
+itemTrueKeysList = {"抵点":copy.deepcopy(itemObj), "效果":copy.deepcopy(itemObj), "未分类":copy.deepcopy(itemObj)}
 #更改：生命恢复，能量恢复，远击增幅
-offsetKeys = ["技能冷却时间","技能消耗能量","技能引导消耗","心无恶垢","不杀之刃","永不退避","永不背弃","机能缺损","临时虚弱","反噬","不稳定","誓约武具","严苛环境","乾坤一掷","连段携用","持续占用","条件响应","背水一战","乘胜追击","濒死反击","压倒","独行者","奉献","适应性战术"]
+offsetKeys = [
+"技能冷却时间","技能消耗能量","技能引导消耗","心无恶垢","不杀之刃","永不退避","永不背弃","机能缺损","临时虚弱","反噬","不稳定","誓约武具","严苛环境","乾坤一掷","连段携用","持续占用","条件响应","背水一战","乘胜追击","濒死反击","压倒","独行者","奉献","适应性战术"]
 #武具强化是技能词条
-effectKeys = ["技能生效范围","技能生效目标数量","减益效果持续时间","增益效果持续时间","技能释放动作","攻击技能","增幅","技能增幅","稳固攻势","致命","伤害增幅","甲胄反击","封锁","生命栓锁","护甲击破","护甲削减","技能打断","目标锁定","痛击","惊骇","晕击","麻痹打击","寒击","放血","灼烧","注毒","能量抽取","能量燃烧","缓速","强制位移","迟钝","禁令","命中增幅","稳定格挡","坚壁防御","强韧之甲","护甲","连锁护甲","适应性护甲","专项防护","千层甲","甲胄融合","庇护装甲","闪避/防御增幅","守护屏障","防护措施","第六感","心智壁垒","强健体魄","抗性提升","战斗续航","极限顽强","困兽之斗","生存欲望","无惧伤痛","愈合","恢复","瞬间恢复","治疗增幅","复苏之风","生命窃取","过量治疗","恢复","快速冥想","快速恢复","净化","驱散","属性增幅","能量池增幅","远击","远击（增幅）","迅捷","熟练","专家","皮糙肉厚","反射强化","疾行","水下呼吸","跃升","负重增幅","位移","学识渊博","收容","技能容纳","透体","光明化","黑暗化","安魂曲","灵媒","灵击","飞行","隐身","意志解放","愈战愈勇","随机应变","蓄势待发","幸运女神的眷顾","技能强化","高速神言","逆境行者","命运重铸","显赫武具","从属物","组合","武具强化","缄默死神","载具用武器","载具用护盾","载具用插件","外骨骼机甲","充能","智慧核心","飞行载具","共同驾驶","变形出击","全能机体","载具用武器","载具用护盾","载具用插件","过载运行","形态限定"]
+effectKeys = [
+"技能生效范围","技能生效目标数量","减益效果持续时间","增益效果持续时间","技能释放动作","攻击技能","增幅","技能增幅","稳固攻势","致命","伤害增幅","甲胄反击","封锁","生命栓锁","护甲击破","护甲削减","技能打断","目标锁定","痛击","惊骇","晕击","麻痹打击","寒击","放血","灼烧","注毒","能量抽取","能量燃烧","缓速","强制位移","迟钝","禁令","命中增幅","稳定格挡","坚壁防御","强韧之甲","护甲","连锁护甲","适应性护甲","专项防护","千层甲","甲胄融合","庇护装甲","闪避/防御增幅","守护屏障","防护措施","第六感","心智壁垒","强健体魄","抗性提升","战斗续航","极限顽强","困兽之斗","生存欲望","无惧伤痛","愈合","生命恢复","瞬间恢复","治疗增幅","复苏之风","生命窃取","过量治疗","能量恢复","快速冥想","快速恢复","净化","驱散","属性增幅","能量池增幅","远击","远击增幅","迅捷","熟练","专家","皮糙肉厚","反射强化","疾行","水下呼吸","跃升","负重增幅","位移","学识渊博","收容","技能容纳","透体","光明化","黑暗化","安魂曲","灵媒","灵击","飞行","隐身","意志解放","愈战愈勇","随机应变","蓄势待发","幸运女神的眷顾","技能强化","高速神言","逆境行者","命运重铸","显赫武具","从属物","组合","武具强化","缄默死神","载具用武器","载具用护盾","载具用插件","外骨骼机甲","充能","智慧核心","飞行载具","共同驾驶","变形出击","全能机体","载具用武器","载具用护盾","载具用插件","过载运行","形态限定"]
 for key in offsetKeys:
-    improTrueKeysList["抵点"]["subkeys"][key] = copy.deepcopy(subObj)
-    itemTrueKeysList["抵点"]["subkeys"][key] = copy.deepcopy(subObj)
+    improTrueKeysList["抵点"]["subkeys"][key] = copy.deepcopy(improObj)
+    itemTrueKeysList["抵点"]["subkeys"][key] = copy.deepcopy(itemObj)
 for key in effectKeys:
-    improTrueKeysList["效果"]["subkeys"][key] = copy.deepcopy(subObj)
-    itemTrueKeysList["效果"]["subkeys"][key] = copy.deepcopy(subObj)
+    improTrueKeysList["效果"]["subkeys"][key] = copy.deepcopy(improObj)
+    itemTrueKeysList["效果"]["subkeys"][key] = copy.deepcopy(itemObj)
 
 #去除后缀
 dataSource = "./DataSource"
@@ -57,28 +62,8 @@ for paragraph in doc.paragraphs:
         theFile.write(f"'{i[0]}':'[{i[0]}]{i[1]}',\n")
 theFile.close()
 
-#强化库
-improList = {
-"初始技能与日常技能":{"id":1},
-"技能表":{"id":2},
-"特质":{"id":3},
-"职业":{"id":4},
-"种族":{"id":5}}
-
-#文件导入
-for file in os.listdir(improDataBase):
-    if ("更新日志" in file):
-        if (file not in "更新日志.txt"):
-            os.rename(os.path.join(improDataBase, file), os.path.join(improDataBase, "更新日志.txt"))
-    for key in improList:
-        if (key in file) and (file not in key):
-            os.rename(os.path.join(improDataBase, file), os.path.join(improDataBase, key))
-for key in improList:
-    improList[key]["path"] = improDataBase + "/" + key
-
 #添加关键词
-def pushImproKeys(typeId, fileId, skillId, key, data):
-    global subObj
+def pushImproKeys(typeId, fileId, skillId, key, data, subObj):
     #是否有子词条
     if "-" in key:
         keys = key.split('-', 1)
@@ -90,7 +75,7 @@ def pushImproKeys(typeId, fileId, skillId, key, data):
         if skillId not in data["subkeys"][keys[0]]["moreArr"]["skills"]:
             data["subkeys"][keys[0]]["moreArr"]["skills"].append(skillId)
         #处理子词条
-        data["subkeys"][keys[0]] = pushImproKeys(typeId, fileId, skillId, keys[1], data["subkeys"][keys[0]])
+        data["subkeys"][keys[0]] = pushImproKeys(typeId, fileId, skillId, keys[1], data["subkeys"][keys[0]], subObj)
     else:
         if key not in data["subkeys"]:
             data["subkeys"][key] = copy.deepcopy(subObj)
@@ -106,6 +91,21 @@ def pushImproKeys(typeId, fileId, skillId, key, data):
             data["subkeys"][key]["moreArr"]["skills"].append(skillId)
     return data
 
+#重构关键词
+def rebuildImproKeys(obj):
+    for key in obj:
+        obj[key]["subkeys"] = rebuildImproKeys(obj[key]["subkeys"])
+        if len(obj[key]["subkeys"]) > 0:
+            obj[key]["subkeys"].append({"key":"未分类", "subkeys":[], "moreArr":{"files":obj[key]["lessArr"]["files"], "skills":obj[key]["lessArr"]["skills"]}})
+            obj[key]["subkeys"].append({"key":"所有", "subkeys":[], "moreArr":{"files":obj[key]["moreArr"]["files"], "skills":obj[key]["moreArr"]["skills"]}})
+
+    tempArray = []
+    for key in obj:
+        temp = obj[key]
+        temp["key"] = key
+        tempArray.append(temp)
+
+    return tempArray
 
 #对单文件处理
 def dealImproFile(data, typeName, typeId, fileName, fileData, fileId, obj):
@@ -208,13 +208,13 @@ def dealImproFile(data, typeName, typeId, fileName, fileData, fileId, obj):
                         #提取
                         #关键词->技能
                         if offs is not None:
-                            data["抵点"] = pushImproKeys(typeId, fileEleId, skillEleId, key, data["抵点"])
+                            data["抵点"] = pushImproKeys(typeId, fileEleId, skillEleId, key, data["抵点"], improObj)
                             if fileEleId not in data["抵点"]["moreArr"]["files"]:
                                 data["抵点"]["moreArr"]["files"].append(fileEleId)
                             if skillEleId not in data["抵点"]["moreArr"]["skills"]:
                                 data["抵点"]["moreArr"]["skills"].append(skillEleId)
                         else:
-                            data["效果"] = pushImproKeys(typeId, fileEleId, skillEleId, key, data["效果"])
+                            data["效果"] = pushImproKeys(typeId, fileEleId, skillEleId, key, data["效果"], improObj)
                             if fileEleId not in data["效果"]["moreArr"]["files"]:
                                 data["效果"]["moreArr"]["files"].append(fileEleId)
                             if skillEleId not in data["效果"]["moreArr"]["skills"]:
@@ -257,6 +257,24 @@ def dealImproFile(data, typeName, typeId, fileName, fileData, fileId, obj):
                 tempStr = f"<div>{i}</div>"
             obj["data"] += tempStr
 
+#强化库
+improList = {
+"初始技能与日常技能":{"id":1},
+"技能表":{"id":2},
+"特质":{"id":3},
+"职业":{"id":4},
+"种族":{"id":5}}
+
+#文件导入
+for file in os.listdir(improDataBase):
+    if ("更新日志" in file):
+        if (file not in "更新日志.txt"):
+            os.rename(os.path.join(improDataBase, file), os.path.join(improDataBase, "更新日志.txt"))
+    for key in improList:
+        if (key in file) and (file not in key):
+            os.rename(os.path.join(improDataBase, file), os.path.join(improDataBase, key))
+for key in improList:
+    improList[key]["path"] = improDataBase + "/" + key
 
 #挨个处理文件
 for key in improList:
@@ -281,12 +299,46 @@ for type in improList:
         newImproList["data"].append(tempFolder)
 
 #重构关键词
-def rebuildKeys(obj):
+rebuildImproKeysList = rebuildImproKeys(improTrueKeysList)
+
+theFile = open('./src/data/improList.js', 'w', encoding="utf-8")
+x = lzstring.LZString()
+improListStr = json.dumps(newImproList, ensure_ascii=False)
+improTrueKeysListStr = json.dumps(rebuildImproKeysList, ensure_ascii=False)
+theFile.write(f"""export var skillsNum = {totalSkills};export var decImproTrueKeysList = '{x.compressToBase64(improTrueKeysListStr)}';export var decImproList = '{x.compressToBase64(improListStr)}';""")
+theFile.close()
+
+
+#添加关键词
+def pushItemKeys(id, key, data, subObj):
+    #是否有子词条
+    if "-" in key:
+        keys = key.split('-', 1)
+        if keys[0] not in data["subkeys"]:
+            data["subkeys"][keys[0]] = copy.deepcopy(subObj)
+        #包含子类
+        if id not in data["subkeys"][keys[0]]["moreArr"]["items"]:
+            data["subkeys"][keys[0]]["moreArr"]["items"].append(id)
+        #处理子词条
+        data["subkeys"][keys[0]] = pushItemKeys(id, keys[1], data["subkeys"][keys[0]], subObj)
+    else:
+        if key not in data["subkeys"]:
+            data["subkeys"][key] = copy.deepcopy(subObj)
+        #不包含子类
+        if id not in data["subkeys"][key]["lessArr"]["items"]:
+            data["subkeys"][key]["lessArr"]["items"].append(id)
+        #包含子类
+        if id not in data["subkeys"][key]["moreArr"]["items"]:
+            data["subkeys"][key]["moreArr"]["items"].append(id)
+    return data
+
+#重构关键词
+def rebuildItemKeys(obj):
     for key in obj:
-        obj[key]["subkeys"] = rebuildKeys(obj[key]["subkeys"])
+        obj[key]["subkeys"] = rebuildItemKeys(obj[key]["subkeys"])
         if len(obj[key]["subkeys"]) > 0:
-            obj[key]["subkeys"].append({"key":"未分类", "subkeys":[], "moreArr":{"files":obj[key]["lessArr"]["files"], "skills":obj[key]["lessArr"]["skills"]}})
-            obj[key]["subkeys"].append({"key":"所有", "subkeys":[], "moreArr":{"files":obj[key]["moreArr"]["files"], "skills":obj[key]["moreArr"]["skills"]}})
+            obj[key]["subkeys"].append({"key":"未分类", "subkeys":[], "moreArr":{"items":obj[key]["lessArr"]["items"]}})
+            obj[key]["subkeys"].append({"key":"所有", "subkeys":[], "moreArr":{"items":obj[key]["moreArr"]["items"]}})
 
     tempArray = []
     for key in obj:
@@ -296,38 +348,70 @@ def rebuildKeys(obj):
 
     return tempArray
 
+#效果文本处理
+def dealItemEffect(id, str):
+    global itemTrueKeysList
+    twoParts = re.split(r"【实际耗点】", str, 1)
+    if len(twoParts) != 2:
+        #元素id
+        itemTrueKeysList["未分类"]["moreArr"]["items"].append(id)
+        # DEBUG: 所有无实际耗点的技能
+        #print("道具无有耗点？：", id, str)
+        return str
+    realRegex = r"([^：]*：)(.*)"
+    keyRegex = r"([0-9]*)（(抵点：)?([^）]*)）"
 
-#重构关键词
-rebuildImproKeysList = rebuildKeys(improTrueKeysList)
+    tempRealStr = twoParts[1]
 
+    #提取多个实际耗点
+    lines = re.findall(realRegex, twoParts[1])
+    if len(lines) == 0:
+        #元素id
+        itemTrueKeysList["未分类"]["moreArr"]["items"].append(id)
+        # DEBUG: 所有无实际耗点的技能
+        #print("道具无有耗点？：", id, str)
+    for line in lines:
+        #提取并替换真实关键词
+        newString = f"""<span class="skillTitle">{line[0]}</span>"""
+        nowIndex = 0
+        for match_obj in re.finditer(keyRegex, line[1]):
+            #替换
+            cost = match_obj.group(1)
+            offs = match_obj.group(2)
+            key = match_obj.group(3)
+            newString += line[1][nowIndex:match_obj.start()]
+            nowIndex = match_obj.end()
+            #提取
+            #关键词->技能
+            if offs is not None:
+                itemTrueKeysList["抵点"] = pushItemKeys(id, key, itemTrueKeysList["抵点"], itemObj)
+                if id not in itemTrueKeysList["抵点"]["moreArr"]["items"]:
+                    itemTrueKeysList["抵点"]["moreArr"]["items"].append(id)
+            else:
+                itemTrueKeysList["效果"] = pushItemKeys(id, key, itemTrueKeysList["效果"], itemObj)
+                if id not in itemTrueKeysList["效果"]["moreArr"]["items"]:
+                    itemTrueKeysList["效果"]["moreArr"]["items"].append(id)
+            #高亮实际耗点
+            if offs is None:
+                offs = ""
+            else:
+                offs = f"""<span class="preOffset">{offs}</span>"""
+            newString += f"""<span class="prioNum">{cost}</span><span class='fullKey' data-cost='{cost}' data-key='{key}'>（{offs}{key}）</span>"""
+        newString += line[1][nowIndex:]
 
-theFile = open('./src/data/improList.js', 'w', encoding="utf-8")
-x = lzstring.LZString()
-improListStr = json.dumps(newImproList, ensure_ascii=False)
-improTrueKeysListStr = json.dumps(rebuildImproKeysList, ensure_ascii=False)
-theFile.write(f"""export var skillsNum = {totalSkills};export var decImproTrueKeysList = '{x.compressToBase64(improTrueKeysListStr)}';export var decImproList = '{x.compressToBase64(improListStr)}';""")
-theFile.close()
+        #补充遗漏数字高亮
+        restNum = re.findall(r"([0-9]{1,5})(=)", newString)
+        if  len(restNum) > 0:
+            newString = newString.replace(restNum[0][0]+restNum[0][1], f"""<span class="prioNum">{restNum[0][0]}</span>{restNum[0][1]}""")
+        restNum = re.findall(r"(=)([0-9]{1,5})", newString)
+        if  len(restNum) > 0:
+            newString = newString.replace(restNum[0][0]+restNum[0][1], f"""{restNum[0][0]}<span class="prioNum">{restNum[0][1]}</span>""")
 
-#道具库
-itemList = {
-"变量军械库":{"id":1},
-"变量防具库":{"id":2},
-"变量工具库":{"id":3}}
-itemMenusList = {
-"变量军械库":["剑", "刀", "拳套", "长柄", "斧锤", "奇门兵器", "弓", "弩", "半自动枪械", "全自动枪械", "非自动枪械", "魔导器", "共生体武器", "副武器"],
-"变量防具库":["头部", "身体", "背部", "手臂", "腰部", "腿部", "饰品", "共生体", "盾牌", "背包"],
-"变量工具库":["恢复类", "造伤类", "消耗类", "工具类", "组合配件", "载具"]}
+        tempRealStr = tempRealStr.replace(line[0] + line[1], newString)
 
-#文件导入
-for file in os.listdir(itemDataBase):
-    if ("更新日志" in file):
-        if (file not in "更新日志.txt"):
-            os.rename(os.path.join(itemDataBase, file), os.path.join(itemDataBase, "更新日志.txt"))
-    for key in itemList:
-        if (key in file) and (file not in key):
-            os.rename(os.path.join(itemDataBase, file), os.path.join(itemDataBase, key+".xlsx"))
-for file in itemList:
-    itemList[file]["path"] = itemDataBase + "/" + file + ".xlsx"
+    #返回值
+    return twoParts[0] + f"""<span class="preIntro">【实际耗点】</span>""" + tempRealStr
+
 
 #道具分门别类处理
 #武器类型，资历值加成：无用
@@ -348,13 +432,146 @@ def itemMelee(ws, row, col, id):
     tempItem["总计耗点"] = ws.range(row + 4, col + 1).value
     tempItem["体积"] = ws.range(row + 4, col + 3).value
     tempItem["价格"] = ws.range(row + 5, col + 1).value
-    tempItem["效果"] = ws.range(row + 6, col + 0).value
+    tempItem["效果"] = dealItemEffect(id, ws.range(row + 6, col + 0).value)
     tempItem["简介"] = ws.range(row + 6, col + 2).value
     tempItem["效果耗点"] = ws.range(row + 12, col + 1).value
     tempItem["立绘"] = ws.range(row + 13, col + 0).value
     tempItem["制作人"] = ws.range(row + 23, col + 0).value
     tempItem["cost"] = tempItem["总计耗点"]
     return tempItem
+
+#远程
+def itemRange(ws, row, col, id):
+    tempItem = {"key": id, "type": "range"}
+    tempItem["名称"] = ws.range(row + 0, col + 1).value
+    tempItem["武器大类"] = [
+        ws.range(row + 1, col + 1).value,
+        ws.range(row + 1, col + 2).value,
+        ws.range(row + 1, col + 3).value
+    ]
+    tempItem["攻击力结算"] = ws.range(row + 2, col + 1).value
+    tempItem["攻击力耗点"] = ws.range(row + 2, col + 3).value
+    tempItem["载弹量"] = ws.range(row + 3, col + 1).value
+    tempItem["载弹耗点"] = ws.range(row + 3, col + 3).value
+    tempItem["射程"] = ws.range(row + 4, col + 1).value
+    tempItem["射程耗点"] = ws.range(row + 4, col + 3).value
+    tempItem["品质"] = ws.range(row + 5, col + 1).value
+    tempItem["level"] = levelToNum[tempItem["品质"]]
+    tempItem["重量"] = ws.range(row + 5, col + 3).value
+    tempItem["总计耗点"] = ws.range(row + 6, col + 1).value
+    tempItem["体积"] = ws.range(row + 6, col + 3).value
+    tempItem["价格"] = ws.range(row + 7, col + 1).value
+    tempItem["效果"] = dealItemEffect(id, ws.range(row + 8, col + 0).value)
+    tempItem["简介"] = ws.range(row + 8, col + 2).value
+    tempItem["效果耗点"] = ws.range(row + 14, col + 1).value
+    tempItem["立绘"] = ws.range(row + 15, col + 0).value
+    tempItem["制作人"] = ws.range(row + 23, col + 0).value
+    tempItem["cost"] = tempItem["总计耗点"]
+    return tempItem
+
+#防具
+def itemArmor(ws, row, col, id):
+    tempItem = {"key": id, "type": "armor"}
+    tempItem["名称"] = ws.range(row + 0, col + 1).value
+    tempItem["防具部位"] = ws.range(row + 0, col + 3).value
+    tempItem["防御力等级"] = ws.range(row + 1, col + 1).value
+    tempItem["防御力耗点"] = ws.range(row + 1, col + 3).value
+    tempItem["品质"] = ws.range(row + 2, col + 1).value
+    tempItem["level"] = levelToNum[tempItem["品质"]]
+    tempItem["重量"] = ws.range(row + 2, col + 3).value
+    tempItem["总计耗点"] = ws.range(row + 3, col + 1).value
+    tempItem["体积"] = ws.range(row + 3, col + 3).value
+    tempItem["价格"] = ws.range(row + 4, col + 1).value
+    tempItem["效果"] = dealItemEffect(id, ws.range(row + 5, col + 0).value)
+    tempItem["简介"] = ws.range(row + 5, col + 2).value
+    tempItem["效果耗点"] = ws.range(row + 11, col + 1).value
+    tempItem["立绘"] = ws.range(row + 12, col + 0).value
+    tempItem["制作人"] = ws.range(row + 23, col + 0).value
+    tempItem["cost"] = tempItem["总计耗点"]
+    return tempItem
+
+#盾牌
+def itemShield(ws, row, col, id):
+    tempItem = {"key": id, "type": "shield"}
+    tempItem["名称"] = ws.range(row + 0, col + 1).value
+    tempItem["具体分类"] = ws.range(row + 0, col + 3).value
+    tempItem["防御力结算"] = ws.range(row + 1, col + 1).value
+    tempItem["防御力耗点"] = ws.range(row + 1, col + 3).value
+    tempItem["品质"] = ws.range(row + 2, col + 1).value
+    tempItem["level"] = levelToNum[tempItem["品质"]]
+    tempItem["重量"] = ws.range(row + 2, col + 3).value
+    tempItem["总计耗点"] = ws.range(row + 3, col + 1).value
+    tempItem["体积"] = ws.range(row + 3, col + 3).value
+    tempItem["价格"] = ws.range(row + 4, col + 1).value
+    tempItem["效果"] = dealItemEffect(id, ws.range(row + 5, col + 0).value)
+    tempItem["简介"] = ws.range(row + 5, col + 2).value
+    tempItem["效果耗点"] = ws.range(row + 11, col + 1).value
+    tempItem["立绘"] = ws.range(row + 12, col + 0).value
+    tempItem["制作人"] = ws.range(row + 23, col + 0).value
+    tempItem["cost"] = tempItem["总计耗点"]
+    return tempItem
+
+#工具
+def itemTool(ws, row, col, id):
+    tempItem = {"key": id, "type": "tool"}
+    tempItem["名称"] = ws.range(row + 0, col + 1).value
+    tempItem["品质"] = ws.range(row + 0, col + 3).value
+    tempItem["level"] = levelToNum[tempItem["品质"]]
+    tempItem["效果"] = dealItemEffect(id, ws.range(row + 1, col + 0).value)
+    tempItem["重量"] = ws.range(row + 1, col + 3).value
+    tempItem["体积"] = ws.range(row + 2, col + 3).value
+    tempItem["简介"] = ws.range(row + 3, col + 2).value
+    tempItem["效果耗点"] = ws.range(row + 8, col + 1).value
+    tempItem["价格"] = ws.range(row + 9, col + 1).value
+    tempItem["立绘"] = ws.range(row + 10, col + 0).value
+    tempItem["制作人"] = ws.range(row + 23, col + 0).value
+    tempItem["cost"] = tempItem["效果耗点"]
+    return tempItem
+
+#图片导出
+def excelImage(images, row_start, col_start, row_end, col_end, id):
+    #记得删，无需二次
+    #return
+    for row in range(row_start, row_end + 1):
+        for col in range(col_start, col_end + 1):
+            strCoor = f'{col}_{row}'
+            if strCoor in images:
+                itemsImage.append(id)
+                images[strCoor].save(f'./src/data/itemsImage/{id}.png')
+                return
+
+#排序方法
+def itemSortGetCost(ele):
+    return int(ele["cost"])
+def itemSortByCost(x, y):
+    if int(x["cost"]) > int(y["cost"]):
+        return 1
+    elif int(x["cost"]) < int(y["cost"]):
+        return -1
+    else:
+        return 0
+
+#道具库
+itemsImage = []
+itemList = {
+"变量军械库":{"id":1},
+"变量防具库":{"id":2},
+"变量工具库":{"id":3}}
+itemMenusList = {
+"变量军械库":["剑", "刀", "拳套", "长柄", "斧锤", "奇门兵器", "弓", "弩", "半自动枪械", "全自动枪械", "非自动枪械", "魔导器", "共生体武器", "副武器"],
+"变量防具库":["头部", "身体", "背部", "手臂", "腰部", "腿部", "饰品", "共生体", "盾牌", "背包"],
+"变量工具库":["恢复类", "造伤类", "消耗类", "工具类", "组合配件", "载具"]}
+
+#文件导入
+for file in os.listdir(itemDataBase):
+    if ("更新日志" in file):
+        if (file not in "更新日志.txt"):
+            os.rename(os.path.join(itemDataBase, file), os.path.join(itemDataBase, "更新日志.txt"))
+    for key in itemList:
+        if (key in file) and (file not in key):
+            os.rename(os.path.join(itemDataBase, file), os.path.join(itemDataBase, key+".xlsx"))
+for file in itemList:
+    itemList[file]["path"] = itemDataBase + "/" + file + ".xlsx"
 
 #挨个处理道具
 #遍历文件
@@ -371,16 +588,43 @@ for file in itemList:
         itemList[file]["menus"][menu] = {"name": menu, "id": menuId, "items": []}
         ws = wb.sheets[menu]
         ws_op = wb_op[menu]
+        #自行实现图片导入
+        images = {}
+        sheet_images = ws_op._images
+        for image in sheet_images:
+            row = image.anchor._from.row + 1
+            col = image.anchor._from.col + 1
+            images[f'{col}_{row}'] = Image.open(io.BytesIO(image._data()))
         #遍历单元格
         for row in ws_op.iter_rows():
             for cell in row:
                 #这是一个有名字的东西
                 if cell.value == "名称":
+                    #元素id
                     strId = f"""item_{itemList[file]["id"]}_{menuId}_{itemId}"""
-                    #近战，魔导
                     if ws_op.cell(cell.row + 4, cell.column + 0).value == "总计耗点":
+                        #近战，魔导
                         itemList[file]["menus"][menu]["items"].append(itemMelee(ws, cell.row, cell.column, strId))
+                        excelImage(images, cell.row, cell.column - 1, cell.row + 23, cell.column + 3, strId)
+                    elif ws_op.cell(cell.row + 4, cell.column + 0).value == "射程":
+                        #远程
+                        itemList[file]["menus"][menu]["items"].append(itemRange(ws, cell.row, cell.column, strId))
+                        excelImage(images, cell.row, cell.column - 1, cell.row + 23, cell.column + 3, strId)
+                    elif ws_op.cell(cell.row + 1, cell.column + 0).value == "防御力等级":
+                        #防具
+                        itemList[file]["menus"][menu]["items"].append(itemArmor(ws, cell.row, cell.column, strId))
+                        excelImage(images, cell.row, cell.column - 1, cell.row + 23, cell.column + 3, strId)
+                    elif ws_op.cell(cell.row + 1, cell.column + 0).value == "防御力结算":
+                        #盾牌
+                        itemList[file]["menus"][menu]["items"].append(itemShield(ws, cell.row, cell.column, strId))
+                        excelImage(images, cell.row, cell.column - 1, cell.row + 23, cell.column + 3, strId)
+                    elif ws_op.cell(cell.row + 0, cell.column + 2).value == "品质":
+                        #工具
+                        itemList[file]["menus"][menu]["items"].append(itemTool(ws, cell.row, cell.column, strId))
+                        excelImage(images, cell.row, cell.column - 1, cell.row + 23, cell.column + 3, strId)
                     else:
+                        #有问题
+                        print(ws_op.cell(cell.row + 0, cell.column + 1).value)
                         itemId -= 1
                         totalItems -=1
                     itemId += 1
@@ -389,17 +633,6 @@ for file in itemList:
     del itemList[file]["path"]
     wb.save()
     wb.close()
-
-#排序方法
-def itemSortGetCost(ele):
-    return int(ele["cost"])
-def itemSortByCost(x, y):
-    if int(x["cost"]) > int(y["cost"]):
-        return 1
-    elif int(x["cost"]) < int(y["cost"]):
-        return -1
-    else:
-        return 0
 
 #文本分析
 newItemList = []
@@ -410,13 +643,13 @@ for file in itemList:
     newItemList.append(tempFile)
 
 #重构关键词
-rebuildItemKeysList = rebuildKeys(itemTrueKeysList)
-
+rebuildItemKeysList = rebuildItemKeys(itemTrueKeysList)
 
 theFile = open('./src/data/itemList.js', 'w', encoding="utf-8")
 x = lzstring.LZString()
+itemsImageStr = json.dumps(itemsImage, ensure_ascii=False)
 itemListStr = json.dumps(newItemList, ensure_ascii=False)
 itemTrueKeysListStr = json.dumps(rebuildItemKeysList, ensure_ascii=False)
-theFile.write(f"""export var itemsNum = {totalItems};export var decItemTrueKeysList = '{x.compressToBase64(itemTrueKeysListStr)}';export var decItemList = '{x.compressToBase64(itemListStr)}';""")
+theFile.write(f"""export var itemsNum = {totalItems};export var itemsImage = {itemsImageStr};export var decItemTrueKeysList = '{x.compressToBase64(itemTrueKeysListStr)}';export var decItemList = '{x.compressToBase64(itemListStr)}';""")
 theFile.close()
 print("End")

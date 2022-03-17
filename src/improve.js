@@ -1,6 +1,6 @@
 import { decImproList, decImproTrueKeysList, skillsNum } from "./data/improList.js";
 import { getTooltips } from "./data/keysList.js";
-import keyMenu from "./components/keyMenu.vue";
+import improKeyMenu from "./components/ImproKeyMenu.vue";
 
 let main = $(`#main`);
 $('body').append(main);
@@ -46,7 +46,7 @@ let mainText = $(`<div id="leftSideMenu">
         <div v-for="file in type.data" :id="file.key" class="fileText" v-html="file.data"></div>
     </template>
 </div>
-<key-menu v-bind:keys-list="keysList" v-bind:num="skillsNum"></key-menu>`);
+<impro-key-menu v-bind:keys-list="keysList" v-bind:num="skillsNum"></impro-key-menu>`);
 main.append(mainText);
 
 if(process.env.NODE_ENV=="development")
@@ -65,7 +65,7 @@ let mainVue = new Vue({
         skillsNum: skillsNum
     },
     components: {
-        keyMenu
+        improKeyMenu
     },
     mounted:function(){
         let url = window.location.hash;
