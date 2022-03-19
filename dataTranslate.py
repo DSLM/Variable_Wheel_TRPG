@@ -580,7 +580,7 @@ def itemCar(ws, row, col, id):
     tempItem["立绘"] = ws.range(row + 14, col + 4).value
 
     tempItem["制作人"] = ws.range(row + 22, col + 0).value
-    tempItem["cost"] = tempItem["效果耗点"]
+    tempItem["cost"] = tempItem["总计耗点"]
     return tempItem
 
 #图片导出
