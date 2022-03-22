@@ -586,7 +586,7 @@ def itemCar(ws, row, col, id):
 #图片导出
 def excelImage(images, row_start, col_start, row_end, col_end, id):
     #记得删，无需二次
-    return
+    #return
     for row in range(row_start, row_end + 1):
         for col in range(col_start, col_end + 1):
             strCoor = f'{col}_{row}'

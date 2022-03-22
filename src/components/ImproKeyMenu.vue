@@ -85,7 +85,7 @@
     import svgIcon from "./SvgIcon.vue";
 
     export default {
-        name: 'itemKeyMenu',
+        name: 'improKeyMenu',
         props: {
             keysList: {
                 type: Object
